@@ -11,7 +11,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class MeetingChatSocketHandler extends TextWebSocketHandler {
+public class ConferenceChatSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {

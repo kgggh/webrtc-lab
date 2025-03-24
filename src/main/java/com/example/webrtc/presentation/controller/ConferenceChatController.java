@@ -8,11 +8,11 @@ import org.springframework.stereotype.Controller;
 
 @RequiredArgsConstructor
 @Controller
-public class MeetingChatController {
+public class ConferenceChatController {
     private final ChatMessagingService chatMessagingService;
 
-    @MessageMapping("/chat/meeting")
-    public void broadcastMeetingChat(@Payload MeetingChatMessage message) {
+    @MessageMapping("/chat/conference")
+    public void broadcastMeetingChat(@Payload ConferenceChatMessage message) {
         chatMessagingService.sendMeetingMessage(message);
     }
 }
