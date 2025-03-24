@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Signaling Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #participantList {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .participant {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            background-color: #f5f5f5;
+            display: inline-block;
+            width: 100px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .myself {
+            background-color: lightgreen;
+        }
+    </style>
+</head>
+<body>
+<h2>WebRTC Signaling Test</h2>
+<button onclick="connectWebSocket()">Connect WebSocket</button>
+<button onclick="joinRoom()">Join Room</button>
+<button onclick="sendOffer()">Send Offer</button>
+<button onclick="sendCandidate()">Send Candidate</button>
+<button onclick="leaveRoom()">Leave Room</button>
+<button onclick="closeWebSocket()">Close WebSocket</button>
+
+<h3>Current Participants:</h3>
+<div id="participantList"></div>
+
+<script>
+    let socket;
+    const roomId = 1234;  // 테스트용 방 ID
+    const senderId = Math.floor(Math.random() * 1000); // 랜덤 사용자 ID
+    const myUserId = senderId;
+
+    function connectWebSocket() {
+        socket = new WebSocket("ws://localhost:8080/ws/signaling");
+
+        socket.onopen = () => {
+            console.log("WebSocket 연결됨");
+            addMessage("WebSocket 연결됨", "green");
+        };
+
+        socket.onmessage = (event) => {
+            console.log("메시지 수신:", event.data);
+            const message = JSON.parse(event.data);
+            if (message.type === "UPDATE_PARTICIPANTS") {
+                updateParticipantList(message.participants);
+            }
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket 연결 종료");
+            addMessage("WebSocket 연결 종료됨", "red");
+        };
+
+        socket.onerror = (error) => {
+            console.error("⚠WebSocket 오류 발생:", error);
+            addMessage("WebSocket 오류 발생", "orange");
+        };
+
+        // 페이지 종료/새로고침 시 자동으로 LEAVE 메시지 전송
+        window.addEventListener("beforeunload", () => {
+            leaveRoom(true);
+        });
+    }
+
+    function joinRoom() {
+        const message = {
+            type: "JOIN",
+            roomId: roomId,
+            senderId: senderId
+        };
+        sendMessage(message);
+    }
+
+    function sendOffer() {
+        const message = {
+            type: "OFFER",
+            roomId: roomId,
+            senderId: senderId,
+            sdp: "dummy-sdp-offer"
+        };
+        sendMessage(message);
+    }
+
+    function sendCandidate() {
+        const message = {
+            type: "CANDIDATE",
+            roomId: roomId,
+            senderId: senderId,
+            candidate: "dummy-ice-candidate"
+        };
+        sendMessage(message);
+    }
+
+    function leaveRoom(isUnload = false) {
+        const message = {
+            type: "LEAVE",
+            roomId: roomId,
+            senderId: senderId
+        };
+        sendMessage(message);
+
+        if (!isUnload) {
+            console.log("LEAVE 메시지 전송 후 WebSocket 종료 요청");
+        }
+    }
+
+    function closeWebSocket() {
+        leaveRoom();
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close();
+            console.log("WebSocket 수동 종료됨");
+        }
+    }
+
+    function sendMessage(message) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(message));
+            console.log("메시지 전송:", message);
+            addMessage(JSON.stringify(message), "blue");
+        } else {
+            console.warn("WebSocket 연결되지 않음: 메시지 전송 실패", message);
+            addMessage("WebSocket 연결되지 않음", "red");
+        }
+    }
+
+    function addMessage(text, color = "black") {
+        const messageBox = document.getElementById("messageBox");
+
+        if (!messageBox) {
+            return;
+        }
+
+        const messageElement = document.createElement("div");
+        messageElement.textContent = text;
+        messageElement.style.color = color;
+        messageElement.classList.add("message");
+        messageBox.appendChild(messageElement);
+        messageBox.scrollTop = messageBox.scrollHeight;
+    }
+
+    function updateParticipantList(participants) {
+        const participantListDiv = document.getElementById("participantList");
+        participantListDiv.innerHTML = "";
+
+        participants.forEach(userId => {
+            const participantElement = document.createElement("div");
+            participantElement.classList.add("participant");
+
+            if (userId === myUserId) {
+                participantElement.classList.add("myself");
+                participantElement.textContent = "Me";
+            } else {
+                participantElement.textContent = `User ${userId}`;
+            }
+
+            participantListDiv.appendChild(participantElement);
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.example.webrtc.config;
 
-import com.example.webrtc.infra.redis.listener.RedisMeetingMessageSubscriber;
+import com.example.webrtc.infra.redis.listener.RedisConferenceChatMessageSubscriber;
+import com.example.webrtc.infra.redis.listener.RedisConferenceSignalingMessageSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,15 +21,25 @@ public class RedisConfig {
 
     @Bean
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory,
-                                                        MessageListenerAdapter listenerAdapter) {
+                                                        MessageListenerAdapter chatListenerAdapter,
+                                                        MessageListenerAdapter signalingListenerAdapter) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(listenerAdapter, new PatternTopic("chat:meeting:*"));
+
+        container.addMessageListener(chatListenerAdapter, new PatternTopic("conference:chat:*"));
+
+        container.addMessageListener(signalingListenerAdapter, new PatternTopic("conference:signaling:room:*"));
+
         return container;
     }
 
     @Bean
-    public MessageListenerAdapter listenerAdapter(RedisMeetingMessageSubscriber subscriber){
-        return new MessageListenerAdapter(subscriber);
+    public MessageListenerAdapter chatListenerAdapter(RedisConferenceChatMessageSubscriber redisConferenceChatMessageSubscriber) {
+        return new MessageListenerAdapter(redisConferenceChatMessageSubscriber);
+    }
+
+    @Bean
+    public MessageListenerAdapter signalingListenerAdapter(RedisConferenceSignalingMessageSubscriber redisConferenceSignalingMessageSubscriber) {
+        return new MessageListenerAdapter(redisConferenceSignalingMessageSubscriber);
     }
 }

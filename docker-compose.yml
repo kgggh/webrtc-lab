@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  janus-gateway:
+    image: 'canyan/janus-gateway:0.10.7'
+    command: ["/usr/local/bin/janus", "-F", "/usr/local/etc/janus"]
+    ports:
+      - "7088:7088"
+      - "8088:8088"
+      - "8188:8188"
+    volumes:
+      - "./janus/conf/janus.jcfg:/usr/local/etc/janus/janus.jcfg"
+      - "./janus/conf/janus.transport.http.jcfg:/usr/local/etc/janus/janus.transport.http.jcfg"
+      - "./janus/conf/janus.transport.websocket.jcfg:/usr/local/etc/janus/janus.transport.websocket.jcfg"
+      - "./janus/conf/janus.plugin.videoroom.jcfg:/usr/local/etc/janus/janus.plugin.videoroom.jcfg"
+    restart: always
+    networks:
+      - janus
+
+  janus_web:
+    image: httpd:alpine
+    ports:
+      - "8999:80"
+    volumes:
+      - ./janus/html:/usr/local/apache2/htdocs/
+    restart: always
+    networks:
+      - janus
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+networks:
+  janus:
+    driver: bridge

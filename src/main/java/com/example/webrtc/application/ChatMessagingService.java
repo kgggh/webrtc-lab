@@ -1,7 +1,7 @@
 package com.example.webrtc.application;
 
-import com.example.webrtc.presentation.controller.MeetingChatMessage;
+import com.example.webrtc.presentation.controller.ConferenceChatMessage;
 
 public interface ChatMessagingService {
-    void sendMeetingMessage(MeetingChatMessage message);
+    void sendMeetingMessage(ConferenceChatMessage message);
 }
