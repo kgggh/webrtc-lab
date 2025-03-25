@@ -1,1 +1,3 @@
 rootProject.name = 'webrtc-prac'
+include 'video-conference'
+include 'audio-processing'

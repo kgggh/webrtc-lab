@@ -1,4 +1,0 @@
-webrtc:
-  janus:
-    web-socket-url: "ws://localhost:8188/media"
-    http-url: "http://localhost:8088/media"
